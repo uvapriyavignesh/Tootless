@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch
 import constant as co
 
 
@@ -32,12 +31,12 @@ class NeuralNetwork(nn.Module):
         self.hidden_active = (
             self.blue_print.get(co.ACTIVATION_FUNCTION_HIDDEN_LAYER)()
             if self.blue_print.get(co.ACTIVATION_FUNCTION_HIDDEN_LAYER) is not None
-            else self.blue_print.get(co.ACTIVATION_FUNCTION_OUTPUT_LAYER)()
+            else self.blue_print.get(co.ACTIVATION_FUNCTION)()
         )
         self.out_active = (
             self.blue_print.get(co.ACTIVATION_FUNCTION_OUTPUT_LAYER)()
             if self.blue_print.get(co.ACTIVATION_FUNCTION_OUTPUT_LAYER) is not None
-            else self.blue_print.get(co.ACTIVATION_FUNCTION_OUTPUT_LAYER)()
+            else self.blue_print.get(co.ACTIVATION_FUNCTION)()
         )
 
     def forward(self, x):
@@ -46,9 +45,6 @@ class NeuralNetwork(nn.Module):
             if i == 0:
                 x = self.activation(self.hidden_layers[i](x))
             else:
-                if self.hidden_active is not None:
-                    x = self.hidden_active(self.hidden_layers[i](x))
-                else:
-                    x = self.activation(self.hidden_layers[i](x))
+                x = self.hidden_active(self.hidden_layers[i](x))
         x = self.out_active(self.out_layer(x))
         return x
