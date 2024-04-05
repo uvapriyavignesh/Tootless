@@ -6,8 +6,8 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
-
+from tensorflow.keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
 def neural_network_blue_print(
     input_node_count,
     activation_fnc,
@@ -61,12 +61,13 @@ def refactor_input_out_put_parameter(data):
     #     )
     # )
     out_label = data["status"].tolist()
-    input_lable = data["text"].tolist()
+    input_lable = [i.lower() for i in data["text"].tolist()]
+    tokenizer= get_tokenizer(input_lable)
     x_train = torch.tensor(
-        vectorizer.fit_transform(input_lable).toarray(), dtype=torch.float32
-    )
-    y_train = torch.tensor(label_encoder.fit_transform(out_label), dtype=torch.long)
-    return x_train, y_train
+       add_padd_sequence(tokenizer.texts_to_sequences(input_lable)), dtype=torch.float32
+    ).to("cuda:0")
+    y_train = torch.tensor(label_encoder.fit_transform(out_label), dtype=torch.long).to("cuda:0")
+    return x_train, y_train,tokenizer
 
 
 def suffeling_date(data):
@@ -85,5 +86,15 @@ def split_train_test_dataset(x_train, y_train, trainig_rate):
 def train_data_set_split_batch(x_train, y_train, batch_size):
 
     train_data = TensorDataset(x_train, y_train)
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, pin_memory=False)
     return train_loader
+
+def get_tokenizer(data):
+    tokenizer=Tokenizer(num_words=1000,lower=True)
+    tokenizer.fit_on_texts(data)
+    return tokenizer
+    # sequences = tokenizer.texts_to_sequences(sam)
+
+def add_padd_sequence(data):
+    max_len=10
+    return pad_sequences(data,padding='post',maxlen=max_len)
