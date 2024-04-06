@@ -1,36 +1,26 @@
-import torch.nn as nn
+import common_resources
+torch,device=common_resources.get_torch_data()
 
+class NETWORK(torch.nn.Module):
+    
+    def __init__(self, input_dim, embedding_dim, hidden_dim, output_dim):
+        super().__init__()
 
-class RnnNetworkModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, dropout_prob=0.5):
-        super(RnnNetworkModel, self).__init__()
-        self.rnn = nn.RNN(input_size, hidden_size, batch_first=True)
-        self.dropout = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(hidden_size, 100)
-        self.h0 = nn.Linear(100, 150)
-        self.h1 = nn.Linear(150, 150)
-        self.h2 = nn.Linear(150, 100)
-        self.fc2 = nn.Linear(100, 50)
-        self.fc3 = nn.Linear(50, output_size)
-        self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
+        self.embedding = torch.nn.Embedding(input_dim, embedding_dim)
+     
+        self.rnn = torch.nn.LSTM(embedding_dim,
+                                 hidden_dim)   
+             
+        self.fc = torch.nn.Linear(hidden_dim, output_dim)
+        
 
-    def forward(self, x):
-        out, inut_layer = self.rnn(x)
-        out = self.relu(self.fc1(out[:, -1, :]))
-
-        out = self.dropout(out)
-        out = self.relu(self.h0(out))
-        out = self.dropout(out)
-
-        out = self.dropout(out)
-        out = self.relu(self.h1(out))
-        out = self.dropout(out)
-
-        out = self.dropout(out)
-        out = self.relu(self.h2(out))
-        out = self.dropout(out)
-
-        out = self.relu(self.fc2(out))
-        out = self.sigmoid(self.fc3(out))
-        return out
+    def forward(self, text, text_length):
+        
+        embedded = self.embedding(text)
+        packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, text_length.to('cpu'))
+        packed_output, (hidden, cell) = self.rnn(packed)
+        
+        hidden.squeeze_(0)
+        
+        output = self.fc(hidden)
+        return output
