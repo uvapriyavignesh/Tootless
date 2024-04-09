@@ -22,7 +22,7 @@ def get_train_test_data_set():
     text_spliter_class,label_spliter_class=get_text_label_splitter_from_torch_text()
     fields = [(co.TEXT_COLUMN_NAME, text_spliter_class), (co.LABEL_COLUMN_NAME, label_spliter_class)]
     dataset = torchtext.data.TabularDataset(
-    path='C:\\Toothless\\data\\filter_date.csv', format='csv',
+    path='C:\\Toothless\\data\\filter_date_1.csv', format='csv',
     skip_header=True, fields=fields)
 
     
